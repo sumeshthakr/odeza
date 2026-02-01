@@ -1,0 +1,33 @@
+[package]
+name = "odeza-core"
+description = "Core engine runtime for Odeza - Mobile-first AAA game engine"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+thiserror.workspace = true
+anyhow.workspace = true
+log.workspace = true
+crossbeam.workspace = true
+rayon.workspace = true
+parking_lot.workspace = true
+serde.workspace = true
+glam.workspace = true
+hecs.workspace = true
+bitflags.workspace = true
+smallvec.workspace = true
+ahash.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+criterion.workspace = true
+
+[[bench]]
+name = "ecs_benchmarks"
+harness = false
+
+[[bench]]
+name = "job_system_benchmarks"
+harness = false

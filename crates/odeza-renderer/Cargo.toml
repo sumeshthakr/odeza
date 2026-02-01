@@ -1,0 +1,24 @@
+[package]
+name = "odeza-renderer"
+description = "Hybrid AAA renderer for Odeza engine with RT support"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+odeza-core = { path = "../odeza-core" }
+odeza-platform = { path = "../odeza-platform" }
+
+thiserror.workspace = true
+anyhow.workspace = true
+log.workspace = true
+parking_lot.workspace = true
+wgpu.workspace = true
+glam.workspace = true
+bitflags.workspace = true
+smallvec.workspace = true
+ahash.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]

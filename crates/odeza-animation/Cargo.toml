@@ -1,0 +1,16 @@
+[package]
+name = "odeza-animation"
+description = "Animation system for Odeza engine"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+odeza-core = { path = "../odeza-core" }
+
+glam.workspace = true
+smallvec.workspace = true
+ahash.workspace = true
+
+[dev-dependencies]

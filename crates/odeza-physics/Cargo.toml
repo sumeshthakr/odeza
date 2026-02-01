@@ -1,0 +1,16 @@
+[package]
+name = "odeza-physics"
+description = "Physics system for Odeza engine"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+odeza-core = { path = "../odeza-core" }
+
+glam.workspace = true
+parking_lot.workspace = true
+smallvec.workspace = true
+
+[dev-dependencies]
