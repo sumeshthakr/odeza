@@ -132,6 +132,9 @@ impl TwoBoneIK {
         }
     }
 
+    const MIN_TARGET_LENGTH: f32 = 1e-4;
+    const ELBOW_ANGLE_EPSILON: f32 = 1e-5;
+
     pub fn solve(&self, root: Vec3, mid: Vec3, end: Vec3) -> (Quat, Quat) {
         let weight = self.weight.clamp(0.0, 1.0);
 
@@ -141,7 +144,10 @@ impl TwoBoneIK {
 
         let upper_len = upper.length();
         let lower_len = lower.length();
-        let target_len = target.length().max(1e-4).min(upper_len + lower_len);
+        let target_len = target
+            .length()
+            .max(Self::MIN_TARGET_LENGTH)
+            .min(upper_len + lower_len);
 
         let current_dir = (end - root).normalize_or_zero();
         let target_dir = target.normalize_or_zero();
@@ -156,9 +162,13 @@ impl TwoBoneIK {
         let elbow_angle = std::f32::consts::PI - cos_angle.acos();
 
         // Axis for elbow rotation based on pole vector
-        let axis = target_dir.cross(self.pole).try_normalize().unwrap_or(Vec3::Z);
+        let axis = target_dir
+            .cross(self.pole)
+            .try_normalize()
+            // Fall back to any perpendicular axis if pole is colinear with target
+            .unwrap_or_else(|| target_dir.any_orthonormal_vector());
         // If the target is already aligned with the current chain direction, avoid rotating
-        let mid_rot_full = if elbow_angle.abs() < 1e-5 {
+        let mid_rot_full = if elbow_angle.abs() < Self::ELBOW_ANGLE_EPSILON {
             Quat::IDENTITY
         } else {
             Quat::from_axis_angle(axis, elbow_angle)
