@@ -1,0 +1,23 @@
+[package]
+name = "odeza-editor"
+description = "Editor application for Odeza engine"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+odeza-core = { path = "../odeza-core" }
+odeza-platform = { path = "../odeza-platform" }
+odeza-renderer = { path = "../odeza-renderer" }
+odeza-assets = { path = "../odeza-assets" }
+
+thiserror.workspace = true
+anyhow.workspace = true
+log.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+glam.workspace = true
+parking_lot.workspace = true
+
+[dev-dependencies]
