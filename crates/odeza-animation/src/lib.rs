@@ -132,9 +132,43 @@ impl TwoBoneIK {
         }
     }
 
-    pub fn solve(&self, _root: Vec3, _mid: Vec3, _end: Vec3) -> (Quat, Quat) {
-        // Placeholder - would implement actual IK solving
-        (Quat::IDENTITY, Quat::IDENTITY)
+    pub fn solve(&self, root: Vec3, mid: Vec3, end: Vec3) -> (Quat, Quat) {
+        let weight = self.weight.clamp(0.0, 1.0);
+
+        let upper = mid - root;
+        let lower = end - mid;
+        let target = self.target - root;
+
+        let upper_len = upper.length();
+        let lower_len = lower.length();
+        let target_len = target.length().max(1e-4).min(upper_len + lower_len);
+
+        let current_dir = (end - root).normalize_or_zero();
+        let target_dir = target.normalize_or_zero();
+
+        // Root rotation to align current direction to the target direction
+        let root_rot_full = Quat::from_rotation_arc(current_dir, target_dir);
+
+        // Compute elbow angle using the law of cosines
+        let cos_angle = ((upper_len * upper_len + lower_len * lower_len - target_len * target_len)
+            / (2.0 * upper_len * lower_len))
+            .clamp(-1.0, 1.0);
+        let elbow_angle = std::f32::consts::PI - cos_angle.acos();
+
+        // Axis for elbow rotation based on pole vector
+        let axis = target_dir.cross(self.pole).try_normalize().unwrap_or(Vec3::Z);
+        // If the target is already aligned with the current chain direction, avoid rotating
+        let mid_rot_full = if elbow_angle.abs() < 1e-5 {
+            Quat::IDENTITY
+        } else {
+            Quat::from_axis_angle(axis, elbow_angle)
+        };
+
+        // Apply weighting
+        let root_rot = Quat::IDENTITY.slerp(root_rot_full, weight);
+        let mid_rot = Quat::IDENTITY.slerp(mid_rot_full, weight);
+
+        (root_rot, mid_rot)
     }
 }
 
@@ -153,5 +187,24 @@ mod tests {
     fn test_two_bone_ik() {
         let ik = TwoBoneIK::new(Vec3::new(1.0, 0.0, 0.0));
         assert_eq!(ik.weight, 1.0);
+    }
+
+    #[test]
+    fn test_two_bone_ik_identity_when_aligned() {
+        let ik = TwoBoneIK::new(Vec3::new(0.0, 2.0, 0.0));
+        let (root_rot, mid_rot) = ik.solve(Vec3::ZERO, Vec3::Y, Vec3::new(0.0, 2.0, 0.0));
+        assert!(root_rot.length() - 1.0 < 1e-5);
+        assert!(mid_rot.length() - 1.0 < 1e-5);
+        assert!(root_rot.angle_between(Quat::IDENTITY) < 1e-3);
+        assert!(mid_rot.angle_between(Quat::IDENTITY) < 1e-3);
+    }
+
+    #[test]
+    fn test_two_bone_ik_rotates_toward_target() {
+        let ik = TwoBoneIK::new(Vec3::new(1.0, 1.0, 0.0));
+        let (root_rot, _) = ik.solve(Vec3::ZERO, Vec3::Y, Vec3::new(0.0, 2.0, 0.0));
+        let rotated_dir = root_rot * Vec3::Y;
+        let target_dir = Vec3::new(1.0, 1.0, 0.0).normalize();
+        assert!(rotated_dir.normalize().dot(target_dir) > 0.9);
     }
 }
